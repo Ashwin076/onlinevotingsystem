@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-panel">
+            <div class="welcome-content">
+                <div class="logo">
+                    <i class="fas fa-user-graduate"></i>
+                    Student Portal
+                </div>
+                <h1 class="welcome-title">Student Registration</h1>
+                <p class="welcome-text">Create an account to participate in elections</p>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="window.location.href='index.html'">
+                        <i class="fas fa-sign-in-alt"></i> Log In
+                    </button>
+                    <button class="btn btn-outline" onclick="window.location.href='register.html'">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="registration-panel">
+            <div class="registration-card">
+                <div class="registration-header">
+                    <h2 class="registration-title">Create Student Account</h2>
+                    <p class="registration-subtitle">Register to access the voting system</p>
+                </div>
+                
+                <form id="registrationForm" onsubmit="registerStudent(event)">
+                    <div class="form-group">
+                        <label class="form-label">Student ID</label>
+                        <div class="input-group">
+                            <i class="fas fa-id-card input-icon"></i>
+                            <input type="text" class="form-control" id="studentId" placeholder="Enter your student ID" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" class="form-control" id="fullName" placeholder="Enter your full name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" class="form-control" id="password" placeholder="Create a password" required>
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('password', this)"></i>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-meter" id="strengthMeter"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Repeat Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" class="form-control" id="repeatPassword" placeholder="Confirm your password" required>
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('repeatPassword', this)"></i>
+                        </div>
+                        <div id="passwordMatch" class="strength-text"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                    
+                    <div class="login-link">
+                        Already have an account? <a href="index.html">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            
+            // Contains numbers
+            if (password.match(/\d/)) strength++;
+            
+            // Contains special characters
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            // Contains both uppercase and lowercase
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            
+            return strength;
+        }
+
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            const strengthMeter = document.getElementById('strengthMeter');
+            const strengthText = document.getElementById('strengthText');
+            
+            let width = 0;
+            let color = '#f44336';
+            let text = 'Weak';
+            
+            if (strength >= 4) {
+                width = 100;
+                color = '#4CAF50';
+                text = 'Strong';
+            } else if (strength >= 2) {
+                width = 66;
+                color = '#FFC107';
+                text = 'Medium';
+            } else if (password.length > 0) {
+                width = 33;
+            }
+            
+            strengthMeter.style.width = `${width}%`;
+            strengthMeter.style.backgroundColor = color;
+            strengthText.textContent = password.length > 0 ? text : '';
+            strengthText.style.color = color;
+        });
+
+        document.getElementById('repeatPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const repeatPassword = this.value;
+            const passwordMatch = document.getElementById('passwordMatch');
+            
+            if (repeatPassword === '') {
+                passwordMatch.textContent = '';
+            } else if (repeatPassword !== password) {
+                passwordMatch.textContent = 'Passwords do not match';
+                passwordMatch.style.color = '#f44336';
+            } else {
+                passwordMatch.textContent = 'Passwords match!';
+                passwordMatch.style.color = '#4CAF50';
+            }
+        });
+
+        function registerStudent(event) {
+            event.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value;
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const repeatPassword = document.getElementById('repeatPassword').value;
+            
+            if (password !== repeatPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            fetch('http://localhost:3002/api/registerStudent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    full_name: fullName,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Student account created successfully!');
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.message || 'Registration failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'An error occurred during registration.');
+            });
+        }
+    </script>
+</body>
+</html>

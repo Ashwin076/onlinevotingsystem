@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Voting System</title>
+    <meta name="description" content="Online Voting System for educational institutions">
+    <meta name="keywords" content="voting, election, student, admin, portal">
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">             
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-panel">
+            <div class="welcome-content">
+                <div class="logo">
+                    <i class="fas fa-vote-yea"></i>
+                    Online Voting System
+                </div>
+                <h1 class="welcome-title">Welcome to Our Voting Platform</h1>
+                <p class="welcome-text">Please select your role to continue</p>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="window.location.href='admin/index.html'" aria-label="Admin Portal">
+                        <i class="fas fa-user-shield"></i> Admin Portal
+                    </button>
+                    <button class="btn btn-outline" onclick="window.location.href='student/index.html'" aria-label="Student Portal">
+                        <i class="fas fa-user-graduate"></i> Student Portal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const userRole = sessionStorage.getItem('userRole');
+            if (userRole === 'admin') {
+                window.location.href = 'admin/dashboard.html';
+            } else if (userRole === 'student') {
+                window.location.href = 'student/dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

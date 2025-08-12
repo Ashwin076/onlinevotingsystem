@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-panel">
+            <div class="welcome-content">
+                <div class="logo">
+                    <i class="fas fa-user-graduate"></i>
+                    Student Dashboard
+                </div>
+                <h1 class="welcome-title">Welcome, <span id="studentName"></span></h1>
+                <div class="student-info">
+                    <p id="studentEmail"></p>
+                    <p id="studentId"></p>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-panel">
+            <div class="dashboard-card">
+                <div class="dashboard-header">
+                    <h2 class="dashboard-title">Active Elections</h2>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div class="elections-list" id="electionsList">
+                        <!-- Elections will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voting Modal -->
+    <div id="votingModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="votingModalTitle">Vote in Election</h2>
+            <div id="candidatesContainer">
+                <!-- Candidates will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="resultsModalTitle">Election Results</h2>
+            <div id="resultsContainer">
+                <!-- Results will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            const userRole = sessionStorage.getItem('userRole');
+            
+            if (!currentUser || userRole !== 'student') {
+                window.location.href = '../index.html';
+                return;
+            }
+            
+            document.getElementById('studentName').textContent = currentUser.fullName;
+            document.getElementById('studentEmail').textContent = currentUser.email;
+            document.getElementById('studentId').textContent = `ID: ${currentUser.studentId}`;
+            
+            loadActiveElections();
+            
+            // Voting modal setup
+            const votingModal = document.getElementById('votingModal');
+            const votingSpan = document.querySelector('#votingModal .close');
+            
+            votingSpan.onclick = function() {
+                votingModal.style.display = 'none';
+            }
+            
+            // Results modal setup
+            const resultsModal = document.getElementById('resultsModal');
+            const resultsSpan = document.querySelector('#resultsModal .close');
+            
+            resultsSpan.onclick = function() {
+                resultsModal.style.display = 'none';
+            }
+            
+            // Close modals when clicking outside
+            window.onclick = function(event) {
+                if (event.target == votingModal) {
+                    votingModal.style.display = 'none';
+                }
+                if (event.target == resultsModal) {
+                    resultsModal.style.display = 'none';
+                }
+            }
+        });
+        
+        function loadActiveElections() {
+            fetch('http://localhost:3002/api/elections/active')
+                .then(response => response.json())
+                .then(data => {
+                    const electionsList = document.getElementById('electionsList');
+                    
+                    if (data.data.length === 0) {
+                        electionsList.innerHTML = '<p>No active elections at this time.</p>';
+                    } else {
+                        electionsList.innerHTML = data.data.map(election => `
+                            <div class="election-card">
+                                <h3>${election.title}</h3>
+                                <p>${election.description || 'No description'}</p>
+                                <div class="election-dates">
+                                    <span>Ends: ${new Date(election.end_date).toLocaleString()}</span>
+                                </div>
+                                <div class="election-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="viewCandidates('${election.id}', '${election.title}')">
+                                        <i class="fas fa-vote-yea"></i> Vote Now
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewResults('${election.id}', '${election.title}')">
+                                        <i class="fas fa-chart-bar"></i> View Results
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load elections.');
+                });
+        }
+        
+        function viewCandidates(electionId, electionTitle) {
+            fetch(`http://localhost:3002/api/candidates/election/${electionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const candidatesContainer = document.getElementById('candidatesContainer');
+                    document.getElementById('votingModalTitle').textContent = `Vote in ${electionTitle}`;
+                    
+                    if (data.data.length === 0) {
+                        candidatesContainer.innerHTML = '<p>No candidates available for this election.</p>';
+                    } else {
+                        candidatesContainer.innerHTML = data.data.map(candidate => `
+                            <div class="candidate-vote-card">
+                                <div class="candidate-photo">
+                                    ${candidate.photo_url ? 
+                                        `<img src="${candidate.photo_url}" alt="${candidate.name}">` : 
+                                        `<i class="fas fa-user-circle"></i>`}
+                                </div>
+                                <div class="candidate-info">
+                                    <h3>${candidate.name}</h3>
+                                    <p>${candidate.details || 'No details provided'}</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="castVote('${electionId}', '${candidate.id}')">
+                                    <i class="fas fa-vote-yea"></i> Vote
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    document.getElementById('votingModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load candidates.');
+                });
+        }
+        
+        function castVote(electionId, candidateId) {
+            if (!confirm('Are you sure you want to vote for this candidate? This action cannot be undone.')) {
+                return;
+            }
+            
+            fetch('http://localhost:3002/api/votes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    election_id: electionId,
+                    candidate_id: candidateId
+                }),
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Thank you for voting!');
+                    document.getElementById('votingModal').style.display = 'none';
+                    loadActiveElections();
+                } else {
+                    alert(data.message || 'Failed to submit your vote.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting your vote.');
+            });
+        }
+        
+        function viewResults(electionId, electionTitle) {
+            fetch(`http://localhost:3002/api/results/${electionId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const resultsContainer = document.getElementById('resultsContainer');
+                    document.getElementById('resultsModalTitle').textContent = `Results for ${electionTitle}`;
+                    
+                    if (data.data.length === 0) {
+                        resultsContainer.innerHTML = '<p>No results available for this election yet.</p>';
+                    } else {
+                        resultsContainer.innerHTML = data.data.map(candidate => `
+                            <div class="result-card">
+                                <div class="candidate-photo">
+                                    ${candidate.photo_url ? 
+                                        `<img src="${candidate.photo_url}" alt="${candidate.name}">` : 
+                                        `<i class="fas fa-user-circle"></i>`}
+                                </div>
+                                <div class="candidate-info">
+                                    <h3>${candidate.name}</h3>
+                                    <p>${candidate.details || 'No details provided'}</p>
+                                    <div class="vote-count">
+                                        <span>Votes: ${candidate.vote_count}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    document.getElementById('resultsModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'Failed to load results.');
+                });
+        }
+        
+        function logout() {
+            fetch('http://localhost:3002/api/logout', {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    sessionStorage.removeItem('currentUser');
+                    sessionStorage.removeItem('userRole');
+                    window.location.href = '../index.html';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
